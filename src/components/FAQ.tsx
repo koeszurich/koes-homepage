@@ -12,7 +12,7 @@ const FAQ = () => {
   const faqItems = [
     {
       question: "Wie kann ich Mitglied werden?",
-      answer: "Um Mitglied zu werden, fülle einfach das Anmeldeformular auf unserer Website aus oder komm zu einem unserer Events und melde dich vor Ort an. Die Mitgliedschaft steht allen österreichischen Studierenden in Zürich offen!"
+      answer: "Ganz einfach! Benutze einfach den obenstehenden Link zu unserem Google-Formular und sage uns wer du bist. Du wirst dann von uns per E-Mail über deine Aufnahme in den KÖS informiert. Bei Fragen schreibe uns doch einfach eine E-Mail, wir werden so schnell wie möglich antworten. Willkommen beim KÖS!"
     },
     {
       question: "Kostet die Mitgliedschaft etwas?",
@@ -28,11 +28,19 @@ const FAQ = () => {
     },
     {
       question: "Wie oft finden Events statt?",
-      answer: "Wir organisieren mehrere Events pro Semester, darunter regelmäßige Stammtische, kulturelle Veranstaltungen, Ausflüge und Feiern zu österreichischen Anlässen."
+      answer: "Wir organisieren mehrere Events pro Semester, darunter regelmäßige Stammtische und kulturelle Veranstaltungen."
     },
     {
       question: "Kann ich bei der Organisation von Events mithelfen?",
       answer: "Natürlich! Wir freuen uns immer über engagierte Mitglieder, die bei der Organisation und Durchführung von Events mithelfen möchten. Sprich einfach ein Vorstandsmitglied an oder schreib uns eine E-Mail."
+    },
+    {
+      question: "Wie lange gibt es den KÖS?",
+      answer: "Der KÖS besteht seit der konstituierenden Sitzung der Gründungsmitglieder am 22. November 2020."
+    },
+    {
+      question: "Welche Mitgliedschaften gibt es?",
+      answer: "Standard ist eine aktive Mitgliedschaft im KÖS, die dich zur Teilnahme an allen Events des KÖS sowie zur aktiven Mitbestimmung bei Mitgliederversammlungen berechtigt. Wenn du dein Studium irgendwann abgeschlossen hast, kannst du deine Mitgliedschaft in eine passive Mitgliedschaft umwandeln lassen. Diese ist primär für Alumni vorgesehen."
     }
   ];
 

@@ -1,35 +1,73 @@
-
 import { Calendar, Image } from 'lucide-react';
+import { useState } from 'react';
+
+interface PastEvent {
+  id: number;
+  title: string;
+  date: string;
+  description: string;
+  image: string;
+  gallery?: string[];
+}
 
 const PastEvents = () => {
-  const pastEvents = [
+  const [selectedEvent, setSelectedEvent] = useState<PastEvent | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const pastEvents: PastEvent[] = [
     {
       id: 1,
-      title: "Nationalfeiertag 2024",
-      date: "26. Oktober 2024",
-      description: "Feier des österreichischen Nationalfeiertags mit traditionellem Essen und Musik.",
-      image: "/placeholder.svg"
+      title: "Kaiserschmarren und Almdudler",
+      date: "27. März 2025",
+      description: "Wir haben die offizielle Anerkennung des KÖS gefeiert – mit Kaiserschmarren, Almdudler und vielen neuen Gesichtern.",
+      image: "/events/schmarrn-2025/schmarrn_hero.jpeg",
+      gallery: [
+        "/events/schmarrn-2025/schmarrn_0.jpeg",
+      ]
+    },
+    {
+      id: 1,
+      title: "Semesterauftakt FS25",
+      date: "27. Februar 2025",
+      description: "Beim Semesterauftakt im Bqm waren wieder viele neue aber auch beteirs bekannt Gesichter dabei. Wir freuen uns sehr neue Mitglieder begrüßen zu dürfen!",
+      image: "/events/semester-auftakt-FS25/hero.jpeg",
+      gallery: [
+        "/events/semester-auftakt-FS25/0.jpeg",
+      ]
     },
     {
       id: 2,
-      title: "Sommerfest am See",
-      date: "15. Juli 2024",
-      description: "Grillfest am Zürichsee mit Schwimmen, Spiel und Spaß.",
-      image: "/placeholder.svg"
+      title: "Glühweinplausch mit Apfelstrudel",
+      date: "12. Dezember 2024",
+      description: "Gemütlicher Glühweinplausch zum Jahresausklang auf der LFW-Dachterrasse – mit guter Stimmung und vielen bekannten und neuen Leuten.",
+      image: "/events/glühwein-2024/glühwein_0_hero.jpeg",
+      gallery: [
+        "/events/glühwein-2024/glühwein_0.jpeg",
+        "/events/gluehwein2.jpg",
+        "/events/gluehwein3.jpg"
+      ]
     },
     {
       id: 3,
-      title: "Skiwochenende Flumserberg",
-      date: "10. Februar 2024",
-      description: "Gemeinsames Wochenende auf den Schweizer Pisten mit Après-Ski.",
-      image: "/placeholder.svg"
+      title: "Kös Party im Student-Village",
+      date: "21. November 2024",
+      description: "Gemütlicher Abend im ETH Student Village zum Kennenlernen, Wiedersehen und Vernetzen mit anderen Studierenden.",
+      image: "/events/party-höng-2024/party_höng_hero.jpeg",
+      gallery: [
+        "/events/party-höng-2024/party_höng_0.jpeg",
+        "/events/party-höng-2024/party_höng_1.jpeg",
+      ]
     },
     {
       id: 4,
-      title: "Wiener Kaffeehausnachmittag",
-      date: "12. Dezember 2023",
-      description: "Gemütlicher Nachmittag mit Wiener Kaffeespezialitäten und Mehlspeisen.",
-      image: "/placeholder.svg"
+      title: "Global Village an der UZH",
+      date: "5. November 2024",
+      description: "Beim Global Village an der UZH haben wir Österreich mit Manner-Schnitten, Almdudler und guter Laune vertreten.",
+      image: "/events/global-village-2024/global_village_0.jpeg",
+      gallery: [
+        "/events/global-village-2024/global_village_0.jpeg",
+        "/events/global-village-2024/global_village_1.jpeg",
+      ]
     }
   ];
 
@@ -57,7 +95,13 @@ const PastEvents = () => {
                   {event.title}
                 </h3>
                 <p className="text-gray-600 mb-4">{event.description}</p>
-                <button className="flex items-center text-koes-red hover:underline">
+                <button 
+                  className="flex items-center text-koes-red hover:underline"
+                  onClick={() => {
+                    setSelectedEvent(event);
+                    setIsModalOpen(true);
+                  }}
+                >
                   <Image size={16} className="mr-2" />
                   <span>Fotos ansehen</span>
                 </button>
@@ -66,6 +110,43 @@ const PastEvents = () => {
           ))}
         </div>
       </div>
+
+      {/* Photo Gallery Modal */}
+      {isModalOpen && selectedEvent?.gallery && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="text-xl font-bold text-koes-dark">
+                {selectedEvent.title} - Fotogalerie
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-500 hover:text-koes-red transition-colors text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {selectedEvent.gallery.map((img, index) => (
+                <div key={index} className="relative h-fit">
+                  <img
+                    src={img}
+                    alt={`${selectedEvent.title} - Bild ${index + 1}`}
+                    className="w-full h-auto rounded-lg hover:scale-105 transition-transform cursor-pointer"
+                    onClick={() => window.open(img, '_blank')}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

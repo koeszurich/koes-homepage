@@ -24,10 +24,10 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', href: '#home' },
     { name: 'Events', href: '#events' },
+    { name: 'Past Events', href: '#past-events' },
     { name: 'Team', href: '#team' },
     { name: 'FAQ', href: '#faq' },
     { name: 'History', href: '#history' },
-    { name: 'Past Events', href: '#past-events' },
   ];
 
   return (
@@ -55,7 +55,7 @@ const Navbar = () => {
 
           <div className="ml-4 flex items-center space-x-3">
             <a 
-              href="https://instagram.com" 
+              href="https://www.instagram.com/koes.ch/" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-koes-red transition-colors"
@@ -64,7 +64,7 @@ const Navbar = () => {
               <Instagram size={20} />
             </a>
             <a 
-              href="https://whatsapp.com" 
+              href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-koes-red transition-colors"
@@ -102,7 +102,7 @@ const Navbar = () => {
             
             <div className="flex items-center space-x-6 pt-6">
               <a 
-                href="https://instagram.com" 
+                href="https://www.instagram.com/koes.ch/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-koes-red transition-colors flex items-center"
@@ -112,7 +112,7 @@ const Navbar = () => {
                 <span>Instagram</span>
               </a>
               <a 
-                href="https://whatsapp.com" 
+                href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-koes-red transition-colors flex items-center"

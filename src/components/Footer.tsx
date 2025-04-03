@@ -15,7 +15,7 @@ const Footer = () => {
             </p>
             <div className="flex space-x-4">
               <a 
-                href="https://instagram.com" 
+                href="https://www.instagram.com/koes.ch/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-koes-red transition-colors"
@@ -24,7 +24,7 @@ const Footer = () => {
                 <Instagram size={24} />
               </a>
               <a 
-                href="https://whatsapp.com" 
+                href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-koes-red transition-colors"
@@ -45,7 +45,8 @@ const Footer = () => {
               <span>info@koes.ch</span>
             </a>
             <a 
-              href="#" 
+              href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG"
+              target='_blank' 
               className="flex items-center text-gray-300 hover:text-koes-red transition-colors mb-3"
             >
               <MessageSquare size={18} className="mr-2" />

@@ -14,11 +14,11 @@ const Index = () => {
       <Navbar />
       <main>
         <Hero />
-        <Events />
+        {/* <Events /> */}
+        <PastEvents />
         <Team />
         <FAQ />
         <History />
-        <PastEvents />
       </main>
       <Footer />
     </div>

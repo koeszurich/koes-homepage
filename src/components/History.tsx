@@ -18,9 +18,9 @@ const History = () => {
                 <p className="text-lg leading-relaxed text-gray-700 mb-4">
                   Seitdem organisieren wir regelmäßig Veranstaltungen, bieten Unterstützung beim Ankommen in der Schweiz und pflegen ein starkes Gemeinschaftsgefühl unter Österreicher:innen in Zürich. Unser Ziel ist es, ein Stück Heimat in der Ferne zu schaffen und kulturelle Brücken zu bauen.
                 </p>
-                <p className="text-lg leading-relaxed text-gray-700">
+                {/* <p className="text-lg leading-relaxed text-gray-700">
                   Von traditionellen Feiern wie dem Nationalfeiertag und dem Krampuslauf bis hin zu Stamm­tischen, Wanderungen und Skiausflügen – der KÖS bietet vielfältige Möglichkeiten, die österreichische Kultur zu feiern und gleichzeitig neue Freundschaften zu knüpfen.
-                </p>
+                </p> */}
               </div>
             </div>
           </div>

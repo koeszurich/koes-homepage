@@ -1,4 +1,3 @@
-
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 
 const Events = () => {
@@ -33,7 +32,7 @@ const Events = () => {
   ];
 
   return (
-    <section id="events" className="section-padding bg-white">
+    <section id="events" className="section-padding bg-gray-50">
       <div className="container mx-auto">
         <h2 className="section-title text-center">Events</h2>
         <p className="section-subtitle text-center">
@@ -69,14 +68,7 @@ const Events = () => {
                   <span>{event.location}</span>
                 </div>
                 
-                <p className="text-gray-600 mb-6">{event.description}</p>
-              </div>
-              
-              <div className="px-6 pb-6 mt-auto">
-                <button className="w-full cta-button-primary flex items-center justify-center">
-                  <Users size={18} className="mr-2" />
-                  Teilnehmen
-                </button>
+                <p className="text-gray-600">{event.description}</p>
               </div>
             </div>
           ))}
