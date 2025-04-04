@@ -43,8 +43,6 @@ const PastEvents = () => {
       image: "/events/glühwein-2024/glühwein_0_hero.jpeg",
       gallery: [
         "/events/glühwein-2024/glühwein_0.jpeg",
-        "/events/gluehwein2.jpg",
-        "/events/gluehwein3.jpg"
       ]
     },
     {
@@ -118,7 +116,7 @@ const PastEvents = () => {
           onClick={() => setIsModalOpen(false)}
         >
           <div 
-            className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto relative"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-4 border-b flex justify-between items-center">
@@ -127,7 +125,7 @@ const PastEvents = () => {
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-gray-500 hover:text-koes-red transition-colors text-2xl leading-none"
+                className="text-gray-500 hover:text-koes-red transition-colors text-2xl leading-none hidden md:block"
               >
                 ×
               </button>
@@ -143,6 +141,15 @@ const PastEvents = () => {
                   />
                 </div>
               ))}
+            </div>
+            {/* Mobile Close Button */}
+            <div className="sticky bottom-0 w-full p-4 bg-white border-t md:hidden">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="w-full py-2 px-4 bg-koes-red text-white rounded-lg hover:bg-koes-red/90 transition-colors"
+              >
+                Schließen
+              </button>
             </div>
           </div>
         </div>

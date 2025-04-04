@@ -20,7 +20,7 @@ const FAQ = () => {
     },
     {
       question: "Muss ich Österreicher:in sein?",
-      answer: "Hauptsächlich richtet sich der KÖS an Studierende aus Österreich, aber wir freuen uns auch über Mitglieder aus anderen Ländern, die eine Verbindung zu Österreich haben oder einfach an unserer Gemeinschaft teilhaben möchten."
+      answer: "Unsere Mitglieder sind zum überwiegenden Teil Studierende aus Österreich, aber wir freuen uns auch über Mitglieder aus anderen Ländern, die eine Verbindung zu Österreich haben oder einfach an unserer Gemeinschaft teilhaben möchten."
     },
     {
       question: "Wie kann ich dem WhatsApp-Chat beitreten?",
