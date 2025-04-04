@@ -1,73 +1,58 @@
-# Welcome to your Lovable project
+# Kös Homepage
 
-## Project info
+This is the homepage for Kös (pronounced "koesh"), a restaurant and pub located at the heart of TU Berlin's campus. Kös is a beloved meeting point for students, faculty, and visitors, offering a diverse menu of food and beverages in a casual atmosphere.
 
-**URL**: https://lovable.dev/projects/5de759bf-9e3a-4e1d-9a0b-9520a697cdac
+## About Kös
 
-## How can I edit this code?
+Kös serves as both a restaurant during the day and a pub in the evening. It's known for its:
+- Traditional German and international cuisine
+- Wide selection of beers and beverages
+- Student-friendly prices
+- Central location on campus
+- Cozy atmosphere
 
-There are several ways of editing your application.
+## Development
 
-**Use Lovable**
+This project is built using:
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5de759bf-9e3a-4e1d-9a0b-9520a697cdac) and start prompting.
+To start development:
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+# Install dependencies
+npm install
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Deployment
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+This site is deployed using GitHub Pages. To deploy:
 
-**Use GitHub Codespaces**
+1. Build the project:
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+2. Deploy to GitHub Pages:
+```bash
+npm run deploy
+```
 
-## What technologies are used for this project?
+The site will be available at: https://[your-github-username].github.io/koes-homepage/
 
-This project is built with:
+## Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+If you'd like to contribute to this project:
+1. Fork the repository
+2. Create a new branch
+3. Make your changes
+4. Submit a pull request
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/5de759bf-9e3a-4e1d-9a0b-9520a697cdac) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+MIT License

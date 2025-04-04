@@ -13,7 +13,7 @@ const History = () => {
               <BookOpen size={32} className="text-koes-red mr-4 mt-1 flex-shrink-0" />
               <div>
                 <p className="text-lg leading-relaxed text-gray-700 mb-4">
-                  Der Klub der Österreichischen Studierenden Zürich (KÖS) wurde 2017 gegründet, um österreichische Studierende in Zürich zu vernetzen. Was als kleine Gruppe von Freunden begann, die ihr Heimweh nach Österreich teilen wollten, hat sich zu einer lebendigen Gemeinschaft mit über 200 Mitgliedern entwickelt.
+                  Der Klub der Österreichischen Studierenden Zürich (KÖS) wurde 2020 gegründet, um österreichische Studierende in Zürich zu vernetzen. Was als kleine Gruppe von Freunden begann, die ihr Heimweh nach Österreich teilen wollten, hat sich zu einer lebendigen Gemeinschaft mit über 200 Mitgliedern entwickelt.
                 </p>
                 <p className="text-lg leading-relaxed text-gray-700 mb-4">
                   Seitdem organisieren wir regelmäßig Veranstaltungen, bieten Unterstützung beim Ankommen in der Schweiz und pflegen ein starkes Gemeinschaftsgefühl unter Österreicher:innen in Zürich. Unser Ziel ist es, ein Stück Heimat in der Ferne zu schaffen und kulturelle Brücken zu bauen.
