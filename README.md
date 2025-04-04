@@ -1,15 +1,15 @@
-# Kös Homepage
+# KÖS - Klub der Österreichischen Studierenden
 
-This is the homepage for Kös (pronounced "koesh"), a restaurant and pub located at the heart of TU Berlin's campus. Kös is a beloved meeting point for students, faculty, and visitors, offering a diverse menu of food and beverages in a casual atmosphere.
+This is the homepage for KÖS (Klub der Österreichischen Studierenden in Zürich), a non-profit organization that serves as a platform for exchange, events, and community among Austrian students in Zurich.
 
-## About Kös
+## About KÖS
 
-Kös serves as both a restaurant during the day and a pub in the evening. It's known for its:
-- Traditional German and international cuisine
-- Wide selection of beers and beverages
-- Student-friendly prices
-- Central location on campus
-- Cozy atmosphere
+KÖS is dedicated to:
+- Creating a supportive community for Austrian students in Zurich
+- Organizing social and cultural events
+- Facilitating networking and exchange between members
+- Preserving Austrian culture and traditions
+- Supporting new Austrian students in Zurich
 
 ## Development
 
@@ -43,7 +43,7 @@ npm run build
 npm run deploy
 ```
 
-The site will be available at: https://[your-github-username].github.io/koes-homepage/
+The site will be available at: https://koes.ch/
 
 ## Contributing
 
@@ -52,7 +52,3 @@ If you'd like to contribute to this project:
 2. Create a new branch
 3. Make your changes
 4. Submit a pull request
-
-## License
-
-MIT License
