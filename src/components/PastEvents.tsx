@@ -2,7 +2,6 @@ import { Calendar, Image } from 'lucide-react';
 import { useState } from 'react';
 
 interface PastEvent {
-  id: number;
   title: string;
   date: string;
   description: string;
@@ -16,7 +15,6 @@ const PastEvents = () => {
 
   const pastEvents: PastEvent[] = [
     {
-      id: 1,
       title: "Kaiserschmarren und Almdudler",
       date: "27. März 2025",
       description: "Wir haben die offizielle Anerkennung des KÖS gefeiert – mit Kaiserschmarren, Almdudler und vielen neuen Gesichtern.",
@@ -26,7 +24,6 @@ const PastEvents = () => {
       ]
     },
     {
-      id: 1,
       title: "Semesterauftakt FS25",
       date: "27. Februar 2025",
       description: "Beim Semesterauftakt im Bqm waren wieder viele neue aber auch beteirs bekannt Gesichter dabei. Wir freuen uns sehr neue Mitglieder begrüßen zu dürfen!",
@@ -36,7 +33,6 @@ const PastEvents = () => {
       ]
     },
     {
-      id: 2,
       title: "Glühweinplausch mit Apfelstrudel",
       date: "12. Dezember 2024",
       description: "Gemütlicher Glühweinplausch zum Jahresausklang auf der LFW-Dachterrasse – mit guter Stimmung und vielen bekannten und neuen Leuten.",
@@ -46,7 +42,6 @@ const PastEvents = () => {
       ]
     },
     {
-      id: 3,
       title: "Kös Party im Student-Village",
       date: "21. November 2024",
       description: "Gemütlicher Abend im ETH Student Village zum Kennenlernen, Wiedersehen und Vernetzen mit anderen Studierenden.",
@@ -57,7 +52,6 @@ const PastEvents = () => {
       ]
     },
     {
-      id: 4,
       title: "Global Village an der UZH",
       date: "5. November 2024",
       description: "Beim Global Village an der UZH haben wir Österreich mit Manner-Schnitten, Almdudler und guter Laune vertreten.",
@@ -75,8 +69,8 @@ const PastEvents = () => {
         <h2 className="section-title text-center">Vergangene Events</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12">
-          {pastEvents.map((event) => (
-            <div key={event.id} className="flex flex-col md:flex-row md:items-center gap-6 group">
+          {pastEvents.map((event, index) => (
+            <div key={index} className="flex flex-col md:flex-row md:items-center gap-6 group">
               <div className="md:w-1/3 overflow-hidden rounded-lg">
                 <img 
                   src={event.image} 

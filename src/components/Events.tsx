@@ -3,7 +3,6 @@ import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 const Events = () => {
   const upcomingEvents = [
     {
-      id: 1,
       title: "Semestereröffnungsfeier",
       date: "15. September 2025",
       time: "19:00 Uhr",
@@ -12,7 +11,6 @@ const Events = () => {
       image: "/placeholder.svg"
     },
     {
-      id: 2,
       title: "Stammtisch im Josef",
       date: "5. Oktober 2025",
       time: "20:00 Uhr",
@@ -21,7 +19,6 @@ const Events = () => {
       image: "/placeholder.svg"
     },
     {
-      id: 3,
       title: "Wanderung Uetliberg",
       date: "20. Oktober 2025",
       time: "10:00 Uhr",
@@ -40,9 +37,9 @@ const Events = () => {
         </p>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
-          {upcomingEvents.map((event) => (
+          {upcomingEvents.map((event, index) => (
             <div 
-              key={event.id} 
+              key={index}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col"
             >
               <img 
