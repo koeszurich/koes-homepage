@@ -24,10 +24,10 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', href: '#home' },
     // { name: 'Events', href: '#events' },
-    { name: 'Past Events', href: '#past-events' },
-    { name: 'Team', href: '#team' },
+    { name: 'Vergangene Events', href: '#past-events' },
+    { name: 'Vorstand', href: '#team' },
     { name: 'FAQ', href: '#faq' },
-    { name: 'History', href: '#history' },
+    { name: 'Geschichte', href: '#history' },
   ];
 
   return (
