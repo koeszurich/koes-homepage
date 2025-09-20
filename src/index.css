@@ -130,4 +130,18 @@
   .cta-button-secondary {
     @apply bg-white text-koes-red border border-koes-red px-6 py-3 rounded-md font-medium hover:bg-koes-red hover:text-white transition-all shadow-md hover:shadow-lg;
   }
+
+  .calendar {
+    width: 100%;
+    height: 600px;
+    border: solid 1px #777;
+  }
+
+  .section-events {
+    @apply px-0 md:px-8 lg:px-16;
+
+    .container {
+      @apply px-4 md:px-8;
+    }
+  }
 }
