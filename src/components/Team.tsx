@@ -3,10 +3,10 @@ import { Mail } from 'lucide-react';
 const Team = () => {
   const teamMembers = [
     {
-      name: "Alexander Eggerth",
+      name: "Emanuel Mairoll",
       role: "Präsident",
-      bio: "Studiert Informatik an der ETH. Aus Oberösterreich.",
-      image: "/team/aeggerth.jpg"
+      bio: "Studiert Cyber Security an der ETH. Aus Salzburg.",
+      image: "/team/emairoll.jpg"
     },
     {
       name: "Thomas Gratz",
@@ -18,7 +18,7 @@ const Team = () => {
     {
       name: "Seungchan Hwang",
       role: "Kassier",
-      bio: "Student der Statistik an der ETH. Aus Wien.",
+      bio: "Studiert Statistik an der ETH. Aus Wien.",
       image: "/team/shwang.jpg"
     },
     {
@@ -37,21 +37,15 @@ const Team = () => {
     {
       name: "Paul Stephan",
       role: "Social Media",
-      bio: "Student der Statistik an der ETH. Aus Tirol.",
+      bio: "Studiert Statistik an der ETH. Aus Tirol.",
       image: "/team/pstephan.jpg"
     },
-    {
-      name: "Lisa Walther",
-      role: "Mitgliederbetreuung",
-      bio: "Studiert an der PH. Aus Vorarlberg.",
-      image: "/team/lwalther.jpg"
-    },
-    {
-      name: "Emanuel Mairoll",
-      role: "Institutionelle Kontakte & Öffentlichkeitsarbeit",
-      bio: "Studiert Cyber Security an der ETH. Aus Salzburg.",
-      image: "/team/emairoll.jpg"
-    },
+    // {
+    //   name: "Lisa Walther",
+    //   role: "Mitgliederbetreuung",
+    //   bio: "Studiert an der PH. Aus Vorarlberg.",
+    //   image: "/team/lwalther.jpg"
+    // },
     {
       name: "Andreas Papon",
       role: "IT/Multimedia",
@@ -65,11 +59,17 @@ const Team = () => {
       image: "/team/fstöger.jpg"
     },
     {
-      name: "Markus Limbeck",
-      role: "Mitgliederbetreuung",
-      bio: "Informatik-Absolvent der ETH. Aus Niederösterreich.",
-      image: "/team/mlimbeck.jpg"
-    }
+      name: "Alexander Eggerth",
+      role: "Institutionelle Kontakte & Öffentlichkeitsarbeit",
+      bio: "Studiert Informatik an der ETH. Aus Oberösterreich.",
+      image: "/team/aeggerth.jpg"
+    },
+    // {
+    //   name: "Markus Limbeck",
+    //   role: "Mitgliederbetreuung",
+    //   bio: "Informatik-Absolvent der ETH. Aus Niederösterreich.",
+    //   image: "/team/mlimbeck.jpg"
+    // }
   ];
 
   return (
