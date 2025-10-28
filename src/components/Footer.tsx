@@ -81,6 +81,18 @@ const Footer = () => {
         
         <div className="mt-12 pt-6 border-t border-gray-800 text-center text-gray-400">
           <p>© {currentYear} Klub der Österreichischen Studierenden Zürich</p>
+          <div className="flex justify-center gap-4">
+            <div className="footer-logo h-20">
+              <a href="https://vseth.ethz.ch/" target="_blank">
+                <img src="/logos/vseth-invers.svg" alt="VSETH"/>
+              </a>
+            </div>
+            <div className="footer-logo h-20">
+              <a href="https://www.vsuzh.ch/" target="_blank">
+                <img src="/logos/vsuzh-invers.svg" alt="VSUZH"/>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

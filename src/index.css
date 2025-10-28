@@ -144,4 +144,12 @@
       @apply px-4 md:px-8;
     }
   }
+
+  footer {
+    .footer-logo {
+      img {
+        height: 100%
+      }
+    }
+  }
 }
