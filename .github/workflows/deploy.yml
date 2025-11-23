@@ -39,6 +39,8 @@ jobs:
         run: bun run build
         env:
           VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
+        # Note: The build script automatically runs prebuild.js which
+        # obfuscates the site key using multi-layer encoding before bundling
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

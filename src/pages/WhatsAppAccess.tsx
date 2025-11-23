@@ -2,26 +2,17 @@ import { useState } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { MessageSquare, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { decodeSiteKey } from '@/lib/deobfuscator';
 
-// Simple runtime decoding of site key
-// Note: This provides minimal obfuscation and is NOT real security
-// The site key is meant to be public anyway
-const decodeSiteKey = (): string => {
-  const encoded = import.meta.env.VITE_TURNSTILE_SITE_KEY;
-  if (!encoded) {
-    console.error('VITE_TURNSTILE_SITE_KEY is not defined');
-    return '1x00000000000000000000AA'; // Fallback to test key
-  }
-  // Simple base64 decode if the key is encoded, otherwise use as-is
-  try {
-    if (encoded.length > 30 && !encoded.startsWith('1x')) {
-      return atob(encoded);
-    }
-    return encoded;
-  } catch {
-    return encoded;
-  }
-};
+/**
+ * WhatsApp Access Page with Turnstile Protection
+ *
+ * The site key is obfuscated using multi-layer encoding.
+ * CTF players: Good luck reverse engineering this! 🎯
+ *
+ * Reminder: This is security theater. Client-side obfuscation
+ * can always be bypassed. The real security is server-side.
+ */
 
 const WhatsAppAccess = () => {
   const [isVerified, setIsVerified] = useState(false);
