@@ -1,13 +1,34 @@
 import { useState } from 'react';
-import Turnstile from '@marsidev/react-turnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { MessageSquare, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+// Simple runtime decoding of site key
+// Note: This provides minimal obfuscation and is NOT real security
+// The site key is meant to be public anyway
+const decodeSiteKey = (): string => {
+  const encoded = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  if (!encoded) {
+    console.error('VITE_TURNSTILE_SITE_KEY is not defined');
+    return '1x00000000000000000000AA'; // Fallback to test key
+  }
+  // Simple base64 decode if the key is encoded, otherwise use as-is
+  try {
+    if (encoded.length > 30 && !encoded.startsWith('1x')) {
+      return atob(encoded);
+    }
+    return encoded;
+  } catch {
+    return encoded;
+  }
+};
 
 const WhatsAppAccess = () => {
   const [isVerified, setIsVerified] = useState(false);
   const [token, setToken] = useState<string>('');
 
   const whatsappUrl = 'https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG';
+  const siteKey = decodeSiteKey();
 
   const handleVerify = (token: string) => {
     setToken(token);
@@ -43,7 +64,7 @@ const WhatsAppAccess = () => {
                 {/* Turnstile Widget */}
                 <div className="flex justify-center">
                   <Turnstile
-                    siteKey="1x00000000000000000000AA"
+                    siteKey={siteKey}
                     onSuccess={handleVerify}
                     options={{
                       theme: 'light',

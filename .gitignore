@@ -12,6 +12,11 @@ dist
 node_modules
 bower_components
 
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 *.sublime*
 
 psd
