@@ -63,10 +63,8 @@ const Navbar = () => {
             >
               <Instagram size={20} />
             </a>
-            <a 
-              href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
-              target="_blank" 
-              rel="noopener noreferrer"
+            <a
+              href="/whatsapp"
               className="text-gray-600 hover:text-koes-red transition-colors"
               aria-label="WhatsApp"
             >
@@ -111,10 +109,8 @@ const Navbar = () => {
                 <Instagram size={24} className="mr-2" />
                 <span>Instagram</span>
               </a>
-              <a 
-                href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <a
+                href="/whatsapp"
                 className="text-gray-600 hover:text-koes-red transition-colors flex items-center"
                 aria-label="WhatsApp"
               >

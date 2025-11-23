@@ -27,8 +27,8 @@ const Hero = () => {
             >
               Mitglied werden
             </a>
-            <a 
-              href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
+            <a
+              href="/whatsapp"
               className="cta-button-secondary flex items-center justify-center hover:bg-[#00e676] hover:border-[#00e676] font-bold"
               style={{ backgroundColor: '#00e676', borderColor: '#00e676', color: 'white' }}
             >
@@ -47,10 +47,8 @@ const Hero = () => {
               <Instagram size={28} className="mb-2" />
               <span className="text-sm">Instagram</span>
             </a>
-            <a 
-              href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
-              target="_blank" 
-              rel="noopener noreferrer"
+            <a
+              href="/whatsapp"
               className="flex flex-col items-center text-white hover:text-koes-red transition-colors"
             >
               <MessageSquare size={28} className="mb-2" />

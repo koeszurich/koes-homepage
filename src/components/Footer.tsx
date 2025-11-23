@@ -23,10 +23,8 @@ const Footer = () => {
               >
                 <Instagram size={24} />
               </a>
-              <a 
-                href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG" 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <a
+                href="/whatsapp"
                 className="text-gray-300 hover:text-koes-red transition-colors"
                 aria-label="WhatsApp"
               >
@@ -44,9 +42,8 @@ const Footer = () => {
               <Mail size={18} className="mr-2" />
               <span>info@koes.ch</span>
             </a>
-            <a 
-              href="https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG"
-              target='_blank' 
+            <a
+              href="/whatsapp"
               className="flex items-center text-gray-300 hover:text-koes-red transition-colors mb-3"
             >
               <MessageSquare size={18} className="mr-2" />
