@@ -5,12 +5,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Turnstile from 'react-turnstile';
+import Turnstile, {useTurnstile} from 'react-turnstile';
+import {useCallback} from 'react';
 
 interface CaptchaDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onVerify: (token: string) => Promise<void>;
+  verify: (token: string) => Promise<boolean>;
   title: string;
   description: string;
 }
@@ -18,14 +19,20 @@ interface CaptchaDialogProps {
 const CaptchaDialog = ({
                          open,
                          onOpenChange,
-                         onVerify,
+                         verify,
                          title,
                          description,
                        }: CaptchaDialogProps) => {
-  const handleVerify = async (token: string) => {
-    await onVerify(token);
-    onOpenChange(false);
-  };
+  const turnstile = useTurnstile();
+
+  const handleVerify = useCallback(async (token: string) => {
+    const isValid = await verify(token);
+    if (isValid) {
+      onOpenChange(false);
+    } else {
+      turnstile.reset();
+    }
+  }, [turnstile, onOpenChange, verify]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,7 +43,7 @@ const CaptchaDialog = ({
         </DialogHeader>
         <div className="flex justify-center py-4">
           <Turnstile
-            sitekey="1x00000000000000000000AA"
+            sitekey="0x4AAAAAACCbAdhgi1Po4BHy"
             onVerify={handleVerify}
           />
         </div>

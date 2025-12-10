@@ -41,16 +41,30 @@ const WhatsAppProvider = ({children}: WhatsAppProviderProps) => {
     window.location.hash === WHATSAPP_HASH ? DialogState.ImplicitlyOpened : DialogState.Closed
   );
 
-  const getUrl = async (token: string): Promise<string> => {
-    // Stub implementation - returns static example URL
-    return 'https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG';
+  const getUrl = async (token: string): Promise<string | undefined> => {
+    const response = await fetch('https://api.koes.ch/whatsapp', {
+      method: 'POST',
+      body: new URLSearchParams({'cf-turnstile-response': token})
+    });
+    if (!response.ok) {
+      return undefined;
+    }
+    const json = await response.json();
+    if (json.success) {
+      return json.url;
+    }
+    return undefined;
   };
 
-  const handleVerify = useCallback(async (token: string) => {
+  const handleVerify = useCallback(async (token: string): Promise<boolean> => {
     const whatsappUrl = await getUrl(token);
+    if (whatsappUrl === undefined) {
+      return false;
+    }
     setUrl(whatsappUrl);
     // don't open new tab if the dialog was opened implicitly (e.g., via URL fragment), otherwise browsers will block it
     openUrl(whatsappUrl, dialogState === DialogState.ExplicitlyOpened);
+    return true;
   }, [dialogState]);
 
   const handleDialogStateChange = useCallback((state: DialogState) => {
@@ -76,7 +90,7 @@ const WhatsAppProvider = ({children}: WhatsAppProviderProps) => {
       <CaptchaDialog
         open={dialogState !== DialogState.Closed}
         onOpenChange={open => handleDialogStateChange(open ? DialogState.ExplicitlyOpened : DialogState.Closed)}
-        onVerify={handleVerify}
+        verify={handleVerify}
         title="WhatsApp"
         description="Bitte löse das Captcha, um unserer WhatsApp-Community beizutreten."
       />
