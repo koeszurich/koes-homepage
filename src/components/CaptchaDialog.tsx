@@ -1,4 +1,3 @@
-import { Turnstile } from 'react-turnstile';
 import {
   Dialog,
   DialogContent,
@@ -6,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Turnstile from 'react-turnstile';
 
 interface CaptchaDialogProps {
   open: boolean;
@@ -16,12 +16,12 @@ interface CaptchaDialogProps {
 }
 
 const CaptchaDialog = ({
-  open,
-  onOpenChange,
-  onVerify,
-  title,
-  description,
-}: CaptchaDialogProps) => {
+                         open,
+                         onOpenChange,
+                         onVerify,
+                         title,
+                         description,
+                       }: CaptchaDialogProps) => {
   const handleVerify = async (token: string) => {
     await onVerify(token);
     onOpenChange(false);

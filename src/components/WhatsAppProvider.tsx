@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import {createContext, useContext, useState, useCallback, ReactNode} from 'react';
 import CaptchaDialog from './CaptchaDialog';
 
 interface WhatsAppContextType {
@@ -21,59 +21,64 @@ interface WhatsAppProviderProps {
 
 const WHATSAPP_HASH = '#whatsapp';
 
-const WhatsAppProvider = ({ children }: WhatsAppProviderProps) => {
-  const [url, setUrl] = useState<string | undefined>(undefined);
-  const [dialogOpen, setDialogOpen] = useState(false);
+const openUrl = (url: string, new_tab: boolean) => {
+  if (new_tab) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } else {
+    window.location.href = url;
+  }
+};
 
-  const verifyAndGetUrl = async (_token: string): Promise<string> => {
+enum DialogState {
+  Closed,
+  ImplicitlyOpened,
+  ExplicitlyOpened,
+}
+
+const WhatsAppProvider = ({children}: WhatsAppProviderProps) => {
+  const [url, setUrl] = useState<string | undefined>(undefined);
+  const [dialogState, setDialogState] = useState<DialogState>(
+    window.location.hash === WHATSAPP_HASH ? DialogState.ImplicitlyOpened : DialogState.Closed
+  );
+
+  const getUrl = async (token: string): Promise<string> => {
     // Stub implementation - returns static example URL
     return 'https://chat.whatsapp.com/LW1Lwhvr3leJDJlDDpSngG';
   };
 
   const handleVerify = useCallback(async (token: string) => {
-    const whatsappUrl = await verifyAndGetUrl(token);
+    const whatsappUrl = await getUrl(token);
     setUrl(whatsappUrl);
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-  }, []);
+    // don't open new tab if the dialog was opened implicitly (e.g., via URL fragment), otherwise browsers will block it
+    openUrl(whatsappUrl, dialogState === DialogState.ExplicitlyOpened);
+  }, [dialogState]);
 
-  const handleDialogOpenChange = useCallback((open: boolean) => {
-    setDialogOpen(open);
-    if (open) {
-      window.history.replaceState(null, '', WHATSAPP_HASH);
-    } else {
+  const handleDialogStateChange = useCallback((state: DialogState) => {
+    setDialogState(state);
+    if (state === DialogState.Closed) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    } else {
+      window.history.replaceState(null, '', WHATSAPP_HASH);
     }
   }, []);
 
   const openWhatsApp = useCallback(() => {
     if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+      openUrl(url, true);
     } else {
-      handleDialogOpenChange(true);
+      handleDialogStateChange(DialogState.ExplicitlyOpened);
     }
-  }, [url, handleDialogOpenChange]);
-
-  // Check for #whatsapp fragment on mount
-  useEffect(() => {
-    if (window.location.hash === WHATSAPP_HASH) {
-      if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      } else {
-        setDialogOpen(true);
-      }
-    }
-  }, [url]);
+  }, [url, handleDialogStateChange]);
 
   return (
-    <WhatsAppContext.Provider value={{ openWhatsApp }}>
+    <WhatsAppContext.Provider value={{openWhatsApp}}>
       {children}
       <CaptchaDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogOpenChange}
+        open={dialogState !== DialogState.Closed}
+        onOpenChange={open => handleDialogStateChange(open ? DialogState.ExplicitlyOpened : DialogState.Closed)}
         onVerify={handleVerify}
-        title="Verifizierung erforderlich"
-        description="Bitte bestätige, dass du kein Roboter bist, um dem WhatsApp-Chat beizutreten."
+        title="WhatsApp"
+        description="Bitte löse das Captcha, um unserer WhatsApp-Community beizutreten."
       />
     </WhatsAppContext.Provider>
   );
