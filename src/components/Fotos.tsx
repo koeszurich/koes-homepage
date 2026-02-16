@@ -1,19 +1,81 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Camera } from 'lucide-react';
 import { useAlbum } from './AlbumProvider';
 import type { AlbumEntry } from '@/types/album';
 
-const PREVIEW_COUNT = 4;
 const ROTATE_INTERVAL = 10_000;
 
-const Fotos = () => {
-  const { openAlbum, openImage } = useAlbum();
-  const [albums, setAlbums] = useState<AlbumEntry[]>([]);
-  const [previewImages, setPreviewImages] = useState<{ album: string; file: string; globalIndex: number }[]>([]);
-  const [allImages, setAllImages] = useState<{ album: string; file: string }[]>([]);
-  const [loaded, setLoaded] = useState(false);
+interface AlbumImages {
+  album: AlbumEntry;
+  files: string[];
+}
 
-  // Fetch albums and their images for the preview
+interface PreviewTile {
+  album: string;
+  displayName: string;
+  file: string;
+}
+
+/** Pick a random element from an array */
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/**
+ * Build 3 album tiles + 1 "Alle anzeigen" tile.
+ * Guarantees no album or image file appears more than once.
+ */
+function buildPreview(
+  albumData: AlbumImages[],
+): { albumTiles: PreviewTile[]; alleTile: { album: string; file: string } | null } {
+  if (albumData.length === 0) return { albumTiles: [], alleTile: null };
+
+  // Shuffle albums
+  const shuffled = [...albumData].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 3);
+  const usedImages = new Set<string>();
+  const usedAlbumNames = new Set<string>();
+
+  const albumTiles: PreviewTile[] = [];
+  for (const entry of selected) {
+    if (entry.files.length === 0) continue;
+    const file = pickRandom(entry.files);
+    const key = `${entry.album.name}/${file}`;
+    usedImages.add(key);
+    usedAlbumNames.add(entry.album.name);
+    albumTiles.push({
+      album: entry.album.name,
+      displayName: entry.album.displayName,
+      file,
+    });
+  }
+
+  // "Alle anzeigen" tile: pick an image from any album, preferring albums not yet shown
+  let alleTile: { album: string; file: string } | null = null;
+  const remainingAlbums = albumData.filter(a => !usedAlbumNames.has(a.album.name) && a.files.length > 0);
+  const allePool = remainingAlbums.length > 0 ? remainingAlbums : albumData.filter(a => a.files.length > 0);
+
+  if (allePool.length > 0) {
+    const alleAlbum = pickRandom(allePool);
+    // Avoid reusing an already-shown image
+    const availableFiles = alleAlbum.files.filter(f => !usedImages.has(`${alleAlbum.album.name}/${f}`));
+    const file = availableFiles.length > 0 ? pickRandom(availableFiles) : pickRandom(alleAlbum.files);
+    alleTile = { album: alleAlbum.album.name, file };
+  }
+
+  return { albumTiles, alleTile };
+}
+
+const Fotos = () => {
+  const { openAlbum } = useAlbum();
+  const [albumData, setAlbumData] = useState<AlbumImages[]>([]);
+  const [albumTiles, setAlbumTiles] = useState<PreviewTile[]>([]);
+  const [alleTile, setAlleTile] = useState<{ album: string; file: string } | null>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
+  const albumDataRef = useRef<AlbumImages[]>([]);
+
+  // Fetch all album data on mount
   useEffect(() => {
     let cancelled = false;
 
@@ -22,28 +84,29 @@ const Fotos = () => {
         const res = await fetch('/data/albums/index.json');
         const albumList: AlbumEntry[] = await res.json();
         if (cancelled) return;
-        setAlbums(albumList);
 
-        // Load images from all albums for the preview pool
-        const allImgs: { album: string; file: string }[] = [];
+        const data: AlbumImages[] = [];
         for (const album of albumList) {
           try {
             const imgRes = await fetch(`/data/albums/${encodeURIComponent(album.name)}/index.json`);
-            const imgs: string[] = await imgRes.json();
-            for (const file of imgs) {
-              allImgs.push({ album: album.name, file });
-            }
+            const files: string[] = await imgRes.json();
+            data.push({ album, files });
           } catch {
-            // skip albums that fail to load
+            // skip
           }
         }
         if (cancelled) return;
-        setAllImages(allImgs);
 
-        // Pick initial preview images
-        const initial = allImgs.slice(0, PREVIEW_COUNT).map((img, i) => ({ ...img, globalIndex: i }));
-        setPreviewImages(initial);
+        albumDataRef.current = data;
+        setAlbumData(data);
+
+        const { albumTiles: tiles, alleTile: alle } = buildPreview(data);
+        setAlbumTiles(tiles);
+        setAlleTile(alle);
         setLoaded(true);
+        requestAnimationFrame(() => {
+          if (!cancelled) setFadeIn(true);
+        });
       } catch {
         // fail silently
       }
@@ -53,48 +116,26 @@ const Fotos = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // Rotate one preview image every ROTATE_INTERVAL ms
+  // Rotate preview every ROTATE_INTERVAL ms
   useEffect(() => {
-    if (!loaded || allImages.length <= PREVIEW_COUNT) return;
-
-    let nextPoolIndex = PREVIEW_COUNT;
-    let slotToReplace = 0;
+    if (!loaded || albumData.length === 0) return;
 
     const interval = setInterval(() => {
-      const poolIdx = nextPoolIndex % allImages.length;
-      const img = allImages[poolIdx];
-      nextPoolIndex++;
-
-      setPreviewImages(prev => {
-        const next = [...prev];
-        next[slotToReplace % PREVIEW_COUNT] = { ...img, globalIndex: poolIdx };
-        return next;
-      });
-      slotToReplace++;
+      const { albumTiles: tiles, alleTile: alle } = buildPreview(albumDataRef.current);
+      setAlbumTiles(tiles);
+      setAlleTile(alle);
     }, ROTATE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [loaded, allImages]);
+  }, [loaded, albumData.length]);
 
-  const handleOpenAlbum = useCallback(() => {
-    if (albums.length > 0) {
-      openAlbum(albums[0].name);
+  const handleOpenDefault = useCallback(() => {
+    if (albumData.length > 0) {
+      openAlbum(albumData[0].album.name);
     }
-  }, [albums, openAlbum]);
+  }, [albumData, openAlbum]);
 
-  const handleClickPreview = useCallback((albumName: string, file: string) => {
-    // Find the index of this image in its album
-    // We need to fetch the album images to find the correct index
-    fetch(`/data/albums/${encodeURIComponent(albumName)}/index.json`)
-      .then(r => r.json())
-      .then((imgs: string[]) => {
-        const idx = imgs.indexOf(file);
-        openImage(albumName, idx >= 0 ? idx : 0);
-      })
-      .catch(() => openAlbum(albumName));
-  }, [openImage, openAlbum]);
-
-  if (!loaded || previewImages.length === 0) {
+  if (!loaded || albumTiles.length === 0) {
     return null;
   }
 
@@ -106,34 +147,48 @@ const Fotos = () => {
           Eindrücke von unseren vergangenen Events
         </p>
 
-        {/* Preview row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-8">
-          {previewImages.map((img, idx) => (
+        {/* Preview tiles: 3 albums + "Alle anzeigen" */}
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 transition-opacity duration-500 ${
+          fadeIn ? 'opacity-100' : 'opacity-0'
+        }`}>
+          {albumTiles.map((tile) => (
             <button
-              key={`${img.album}-${img.file}-${idx}`}
-              onClick={() => handleClickPreview(img.album, img.file)}
+              key={tile.album}
+              onClick={() => openAlbum(tile.album)}
               className="relative aspect-[4/3] overflow-hidden rounded-lg group focus:outline-none focus:ring-2 focus:ring-koes-red"
             >
               <img
-                src={`/data/albums/${encodeURIComponent(img.album)}/${img.file}`}
-                alt={`Vorschau ${idx + 1}`}
+                src={`/data/albums/${encodeURIComponent(tile.album)}/${tile.file}`}
+                alt={tile.displayName}
                 loading="lazy"
-                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent transition-opacity duration-300" />
+              <span className="absolute bottom-3 left-3 right-3 text-white text-sm sm:text-base font-semibold drop-shadow-lg text-left leading-tight">
+                {tile.displayName}
+              </span>
             </button>
           ))}
-        </div>
 
-        {/* "Alle anzeigen" button */}
-        <div className="flex justify-center mt-8">
-          <button
-            onClick={handleOpenAlbum}
-            className="cta-button-secondary flex items-center gap-2"
-          >
-            <Camera size={18} />
-            Alle anzeigen
-          </button>
+          {/* "Alle anzeigen" tile */}
+          {alleTile && (
+            <button
+              onClick={handleOpenDefault}
+              className="relative aspect-[4/3] overflow-hidden rounded-lg group focus:outline-none focus:ring-2 focus:ring-koes-red"
+            >
+              <img
+                src={`/data/albums/${encodeURIComponent(alleTile.album)}/${alleTile.file}`}
+                alt="Alle Fotos anzeigen"
+                loading="lazy"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent transition-opacity duration-300" />
+              <span className="absolute bottom-3 left-3 right-3 text-white text-sm sm:text-base font-semibold drop-shadow-lg text-left leading-tight flex items-center gap-1.5">
+                <Camera size={16} className="shrink-0" />
+                Alle anzeigen
+              </span>
+            </button>
+          )}
         </div>
       </div>
     </section>

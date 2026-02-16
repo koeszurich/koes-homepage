@@ -9,8 +9,8 @@ Replaced the "Vergangene Events" (Past Events) section with a "Fotos" (Photos) s
 ### New Files
 
 - `src/components/AlbumProvider.tsx` — React context provider managing album state and hash-based routing (`#fotos/{album}`, `#fotos/{album}/{imageIndex}`)
-- `src/components/AlbumDialog.tsx` — Full-screen popup with album selector (pill buttons), image grid, enlarged image view with prev/next navigation and keyboard support
-- `src/components/Fotos.tsx` — Main section component with a 4-image preview row that rotates every 10 seconds, and an "Alle anzeigen" button
+- `src/components/AlbumDialog.tsx` — Full-screen popup (fixed height) with album selector (pill buttons), image grid, enlarged image view with prev/next navigation, keyboard support, touch swipe, smooth fade transitions, and loading spinners
+- `src/components/Fotos.tsx` — Main section component with 3 album preview tiles (name overlay on random image) + an "Alle anzeigen" tile that rotates every 10 seconds; grid uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` matching Team section layout
 - `src/types/album.ts` — Shared `AlbumEntry` type definition
 - `scripts/update-album.sh` — Bash script to create/update album index files from image files in a directory
 
