@@ -26,7 +26,7 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', href: '#home' },
     { name: 'Events', href: '#events' },
-    { name: 'Vergangene Events', href: '#past-events' },
+    { name: 'Fotos', href: '#fotos' },
     { name: 'Vorstand', href: '#team' },
     { name: 'FAQ', href: '#faq' },
     { name: 'Geschichte', href: '#history' },

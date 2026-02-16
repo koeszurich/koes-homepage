@@ -5,7 +5,8 @@ import Events from "@/components/Events";
 import Team from "@/components/Team";
 import FAQ from "@/components/FAQ";
 import History from "@/components/History";
-import PastEvents from "@/components/PastEvents";
+import Fotos from "@/components/Fotos";
+import AlbumDialog from "@/components/AlbumDialog";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -15,11 +16,12 @@ const Index = () => {
       <main>
         <Hero />
         <Events />
-        <PastEvents />
+        <Fotos />
         <Team />
         <FAQ />
         <History />
       </main>
+      <AlbumDialog />
       <Footer />
     </div>
   );
