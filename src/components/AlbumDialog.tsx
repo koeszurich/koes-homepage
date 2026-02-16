@@ -1,7 +1,100 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useAlbum } from './AlbumProvider';
+import { fetchAlbumList, fetchAlbumImages } from '@/lib/albumCache';
 import type { AlbumEntry } from '@/types/album';
+
+/** A single grid image that shows a placeholder until loaded. */
+const GridImage = ({ src, alt, onClick }: { src: string; alt: string; onClick: () => void }) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      className="relative aspect-square overflow-hidden rounded-lg group focus:outline-none focus:ring-2 focus:ring-koes-red bg-gray-100"
+    >
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse bg-gray-200 rounded-lg" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-cover transition-all duration-300 group-hover:scale-110 ${
+          loaded ? 'opacity-100' : 'opacity-0'
+        }`}
+      />
+    </button>
+  );
+};
+
+/** Mobile tabs bar: horizontally scrollable with overflow arrow indicators. */
+const MobileAlbumTabs = ({
+  albums, selected, onSelect,
+}: { albums: AlbumEntry[]; selected: string; onSelect: (name: string) => void }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    return () => el.removeEventListener('scroll', checkScroll);
+  }, [checkScroll, albums]);
+
+  const scroll = (dir: number) => {
+    scrollRef.current?.scrollBy({ left: dir * 180, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="relative md:hidden">
+      {canScrollLeft && (
+        <button
+          onClick={() => scroll(-1)}
+          className="absolute left-0 top-0 bottom-0 z-10 w-8 flex items-center justify-center bg-gradient-to-r from-white via-white/90 to-transparent"
+          aria-label="Nach links scrollen"
+        >
+          <ChevronLeft size={18} className="text-gray-500" />
+        </button>
+      )}
+      <div ref={scrollRef} className="overflow-x-auto scrollbar-hide">
+        <div className="flex min-w-max">
+          {albums.map(album => (
+            <button
+              key={album.name}
+              onClick={() => onSelect(album.name)}
+              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                album.name === selected
+                  ? 'border-koes-red text-koes-red'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {album.displayName}
+            </button>
+          ))}
+        </div>
+      </div>
+      {canScrollRight && (
+        <button
+          onClick={() => scroll(1)}
+          className="absolute right-0 top-0 bottom-0 z-10 w-8 flex items-center justify-center bg-gradient-to-l from-white via-white/90 to-transparent"
+          aria-label="Nach rechts scrollen"
+        >
+          <ChevronRight size={18} className="text-gray-500" />
+        </button>
+      )}
+    </div>
+  );
+};
 
 const AlbumDialog = () => {
   const { state, openAlbum, openImage, closeDialog, closeImage } = useAlbum();
@@ -25,30 +118,32 @@ const AlbumDialog = () => {
     if (isOpen) {
       requestAnimationFrame(() => setOverlayVisible(true));
     } else {
-      setOverlayVisible(false);
+      requestAnimationFrame(() => setOverlayVisible(false));
     }
   }, [isOpen]);
 
   // Animate enlarged view
   useEffect(() => {
     if (state.imageIndex !== null) {
-      setEnlargedImgLoaded(false);
-      requestAnimationFrame(() => setEnlargedVisible(true));
+      requestAnimationFrame(() => {
+        setEnlargedImgLoaded(false);
+        setEnlargedVisible(true);
+      });
     } else {
-      setEnlargedVisible(false);
+      requestAnimationFrame(() => setEnlargedVisible(false));
     }
   }, [state.imageIndex]);
 
-  // Fetch album list when dialog opens
+  // Fetch album list when dialog opens (cached)
   useEffect(() => {
     if (!isOpen) return;
-    if (prevAlbumRef.current !== null && albums.length > 0) return;
+    if (albums.length > 0) return;
 
     let cancelled = false;
-    const fetchAlbums = async () => {
+    const doFetch = async () => {
+      setLoadingAlbums(true);
       try {
-        const res = await fetch('/data/albums/index.json');
-        const data: AlbumEntry[] = await res.json();
+        const data = await fetchAlbumList();
         if (!cancelled) setAlbums(data);
       } catch {
         if (!cancelled) setAlbums([]);
@@ -56,12 +151,11 @@ const AlbumDialog = () => {
         if (!cancelled) setLoadingAlbums(false);
       }
     };
-    setLoadingAlbums(true);
-    fetchAlbums();
+    doFetch();
     return () => { cancelled = true; };
   }, [isOpen, albums.length]);
 
-  // Fetch images for selected album
+  // Fetch images for selected album (cached)
   useEffect(() => {
     const album = state.album;
     if (!album) {
@@ -71,30 +165,24 @@ const AlbumDialog = () => {
     if (album === prevAlbumRef.current) return;
     prevAlbumRef.current = album;
 
-    setImageGridVisible(false);
     let cancelled = false;
-    const fetchImages = async () => {
+    const doFetch = async () => {
+      setImageGridVisible(false);
+      setLoadingImages(true);
+      setImages([]);
       try {
-        const res = await fetch(`/data/albums/${encodeURIComponent(album)}/index.json`);
-        const data: string[] = await res.json();
+        const data = await fetchAlbumImages(album);
         if (!cancelled) {
           setImages(data);
-          requestAnimationFrame(() => {
-            if (!cancelled) setImageGridVisible(true);
-          });
+          requestAnimationFrame(() => { if (!cancelled) setImageGridVisible(true); });
         }
       } catch {
-        if (!cancelled) {
-          setImages([]);
-          setImageGridVisible(true);
-        }
+        if (!cancelled) { setImages([]); setImageGridVisible(true); }
       } finally {
         if (!cancelled) setLoadingImages(false);
       }
     };
-    setLoadingImages(true);
-    setImages([]);
-    fetchImages();
+    doFetch();
     return () => { cancelled = true; };
   }, [state.album]);
 
@@ -126,11 +214,8 @@ const AlbumDialog = () => {
   const handleTouchEnd = useCallback(() => {
     const delta = touchDeltaRef.current;
     const SWIPE_THRESHOLD = 50;
-    if (delta > SWIPE_THRESHOLD) {
-      handlePrev();
-    } else if (delta < -SWIPE_THRESHOLD) {
-      handleNext();
-    }
+    if (delta > SWIPE_THRESHOLD) handlePrev();
+    else if (delta < -SWIPE_THRESHOLD) handleNext();
     touchStartRef.current = null;
     touchDeltaRef.current = 0;
   }, [handlePrev, handleNext]);
@@ -200,11 +285,21 @@ const AlbumDialog = () => {
             </button>
           </div>
 
-          {/* Album selector */}
-          <div className="px-4 py-3 border-b shrink-0 overflow-x-auto">
-            <div className="flex gap-2 min-w-max">
+          {/* Mobile: Tabs with overflow arrows */}
+          {!loadingAlbums && albums.length > 0 && (
+            <MobileAlbumTabs
+              albums={albums}
+              selected={state.album!}
+              onSelect={openAlbum}
+            />
+          )}
+
+          {/* Body: sidebar (desktop) + grid */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Desktop sidebar */}
+            <div className="hidden md:flex flex-col w-56 shrink-0 border-r overflow-y-auto">
               {loadingAlbums ? (
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <div className="flex items-center gap-2 text-gray-400 text-sm p-4">
                   <Loader2 size={14} className="animate-spin" />
                   Laden...
                 </div>
@@ -213,10 +308,10 @@ const AlbumDialog = () => {
                   <button
                     key={album.name}
                     onClick={() => openAlbum(album.name)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+                    className={`px-4 py-3 text-sm text-left transition-colors border-l-2 ${
                       album.name === state.album
-                        ? 'bg-koes-red text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'border-koes-red bg-red-50 text-koes-red font-semibold'
+                        : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
                     {album.displayName}
@@ -224,39 +319,33 @@ const AlbumDialog = () => {
                 ))
               )}
             </div>
-          </div>
 
-          {/* Image grid */}
-          <div className="p-4 overflow-y-auto flex-1">
-            {loadingImages ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3">
-                <Loader2 size={32} className="animate-spin text-koes-red" />
-                <span className="text-gray-400">Fotos werden geladen...</span>
-              </div>
-            ) : images.length === 0 ? (
-              <div className="flex items-center justify-center py-16">
-                <span className="text-gray-400">Keine Fotos vorhanden.</span>
-              </div>
-            ) : (
-              <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 transition-opacity duration-300 ${
-                imageGridVisible ? 'opacity-100' : 'opacity-0'
-              }`}>
-                {images.map((img, index) => (
-                  <button
-                    key={index}
-                    onClick={() => state.album && openImage(state.album, index)}
-                    className="relative aspect-square overflow-hidden rounded-lg group focus:outline-none focus:ring-2 focus:ring-koes-red"
-                  >
-                    <img
+            {/* Image grid */}
+            <div className="p-4 overflow-y-auto flex-1">
+              {loadingImages ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <Loader2 size={32} className="animate-spin text-koes-red" />
+                  <span className="text-gray-400">Fotos werden geladen...</span>
+                </div>
+              ) : images.length === 0 ? (
+                <div className="flex items-center justify-center py-16">
+                  <span className="text-gray-400">Keine Fotos vorhanden.</span>
+                </div>
+              ) : (
+                <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 transition-opacity duration-300 ${
+                  imageGridVisible ? 'opacity-100' : 'opacity-0'
+                }`}>
+                  {images.map((img, index) => (
+                    <GridImage
+                      key={`${state.album}-${index}`}
                       src={`/data/albums/${encodeURIComponent(state.album!)}/${img}`}
                       alt={`Foto ${index + 1}`}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      onClick={() => state.album && openImage(state.album, index)}
                     />
-                  </button>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile close button */}
