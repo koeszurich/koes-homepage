@@ -1,4 +1,21 @@
+import {useEffect} from 'react';
+
 const Events = () => {
+  useEffect(() => {
+    // script for uniclubs widget
+    const script = document.createElement('script');
+    script.src = 'https://uniclubs.ch/embed/uniclubs-events.js';
+    script.defer = true;
+    script.async = true;
+
+    document.body.appendChild(script);
+
+    return () => {
+      // remove on unmount
+      document.body.removeChild(script);
+    };
+  }, []);
+
   return (
     <section id="events" className="section-padding section-events bg-gray-50">
       <div className="container mx-auto">
@@ -7,10 +24,12 @@ const Events = () => {
           Hier findest du unsere kommenden Veranstaltungen.
         </p>
         <div className="mx-auto text-center">
-          <iframe
-            className="calendar"
-            src="https://calendar.google.com/calendar/embed?height=600&wkst=1&ctz=Europe%2FZurich&showPrint=0&showTitle=0&mode=AGENDA&hl=de&showCalendars=0&src=NmM4ODA4ZjU1YmUyODhkODgxNjc5OTk1OWUwYmVmYWIwNTk2YWZiNzdjOWI5MDEyZjllYmZlMzRhY2NmMDBiYkBncm91cC5jYWxlbmRhci5nb29nbGUuY29t&color=%23d50000"
-            frameBorder="0" scrolling="no"></iframe>
+          <div data-uniclubs-events=""
+               data-club="koes"
+               data-max-events="12"
+               data-language="de"
+               data-accent-color="#d62c29"
+               data-hide-header="true"/>
         </div>
       </div>
     </section>
