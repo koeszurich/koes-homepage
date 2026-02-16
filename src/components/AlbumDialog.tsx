@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useAlbum } from './AlbumProvider';
 import type { AlbumEntry } from '@/types/album';
 
@@ -9,13 +9,39 @@ const AlbumDialog = () => {
   const [images, setImages] = useState<string[]>([]);
   const [loadingAlbums, setLoadingAlbums] = useState(false);
   const [loadingImages, setLoadingImages] = useState(false);
+  const [imageGridVisible, setImageGridVisible] = useState(false);
+  const [overlayVisible, setOverlayVisible] = useState(false);
+  const [enlargedVisible, setEnlargedVisible] = useState(false);
+  const [enlargedImgLoaded, setEnlargedImgLoaded] = useState(false);
   const prevAlbumRef = useRef<string | null>(null);
   const isOpen = state.album !== null;
+
+  // Touch swipe state
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchDeltaRef = useRef(0);
+
+  // Animate dialog overlay on open
+  useEffect(() => {
+    if (isOpen) {
+      requestAnimationFrame(() => setOverlayVisible(true));
+    } else {
+      setOverlayVisible(false);
+    }
+  }, [isOpen]);
+
+  // Animate enlarged view
+  useEffect(() => {
+    if (state.imageIndex !== null) {
+      setEnlargedImgLoaded(false);
+      requestAnimationFrame(() => setEnlargedVisible(true));
+    } else {
+      setEnlargedVisible(false);
+    }
+  }, [state.imageIndex]);
 
   // Fetch album list when dialog opens
   useEffect(() => {
     if (!isOpen) return;
-    // Only fetch once when dialog opens
     if (prevAlbumRef.current !== null && albums.length > 0) return;
 
     let cancelled = false;
@@ -39,21 +65,29 @@ const AlbumDialog = () => {
   useEffect(() => {
     const album = state.album;
     if (!album) {
-      // Don't call setImages here to avoid setState in effect body
       prevAlbumRef.current = null;
       return;
     }
     if (album === prevAlbumRef.current) return;
     prevAlbumRef.current = album;
 
+    setImageGridVisible(false);
     let cancelled = false;
     const fetchImages = async () => {
       try {
         const res = await fetch(`/data/albums/${encodeURIComponent(album)}/index.json`);
         const data: string[] = await res.json();
-        if (!cancelled) setImages(data);
+        if (!cancelled) {
+          setImages(data);
+          requestAnimationFrame(() => {
+            if (!cancelled) setImageGridVisible(true);
+          });
+        }
       } catch {
-        if (!cancelled) setImages([]);
+        if (!cancelled) {
+          setImages([]);
+          setImageGridVisible(true);
+        }
       } finally {
         if (!cancelled) setLoadingImages(false);
       }
@@ -66,15 +100,40 @@ const AlbumDialog = () => {
 
   const handlePrev = useCallback(() => {
     if (state.album && state.imageIndex !== null && state.imageIndex > 0) {
+      setEnlargedImgLoaded(false);
       openImage(state.album, state.imageIndex - 1);
     }
   }, [state.album, state.imageIndex, openImage]);
 
   const handleNext = useCallback(() => {
     if (state.album && state.imageIndex !== null && state.imageIndex < images.length - 1) {
+      setEnlargedImgLoaded(false);
       openImage(state.album, state.imageIndex + 1);
     }
   }, [state.album, state.imageIndex, images.length, openImage]);
+
+  // Touch handlers for swipe navigation
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    touchDeltaRef.current = 0;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    touchDeltaRef.current = e.touches[0].clientX - touchStartRef.current.x;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    const delta = touchDeltaRef.current;
+    const SWIPE_THRESHOLD = 50;
+    if (delta > SWIPE_THRESHOLD) {
+      handlePrev();
+    } else if (delta < -SWIPE_THRESHOLD) {
+      handleNext();
+    }
+    touchStartRef.current = null;
+    touchDeltaRef.current = 0;
+  }, [handlePrev, handleNext]);
 
   // Keyboard navigation for enlarged view
   useEffect(() => {
@@ -116,11 +175,15 @@ const AlbumDialog = () => {
     <>
       {/* Album Grid Dialog */}
       <div
-        className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 md:p-4"
+        className={`fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-2 md:p-4 transition-opacity duration-300 ${
+          overlayVisible ? 'opacity-100' : 'opacity-0'
+        }`}
         onClick={closeDialog}
       >
         <div
-          className="bg-white rounded-lg w-full max-w-6xl max-h-[95vh] flex flex-col relative"
+          className={`bg-white rounded-lg w-full max-w-6xl h-[90vh] md:h-[92vh] flex flex-col relative transition-all duration-300 ${
+            overlayVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -141,7 +204,10 @@ const AlbumDialog = () => {
           <div className="px-4 py-3 border-b shrink-0 overflow-x-auto">
             <div className="flex gap-2 min-w-max">
               {loadingAlbums ? (
-                <span className="text-gray-400 text-sm">Laden...</span>
+                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                  <Loader2 size={14} className="animate-spin" />
+                  Laden...
+                </div>
               ) : (
                 albums.map(album => (
                   <button
@@ -163,15 +229,18 @@ const AlbumDialog = () => {
           {/* Image grid */}
           <div className="p-4 overflow-y-auto flex-1">
             {loadingImages ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <Loader2 size={32} className="animate-spin text-koes-red" />
                 <span className="text-gray-400">Fotos werden geladen...</span>
               </div>
             ) : images.length === 0 ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex items-center justify-center py-16">
                 <span className="text-gray-400">Keine Fotos vorhanden.</span>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 transition-opacity duration-300 ${
+                imageGridVisible ? 'opacity-100' : 'opacity-0'
+              }`}>
                 {images.map((img, index) => (
                   <button
                     key={index}
@@ -205,8 +274,13 @@ const AlbumDialog = () => {
       {/* Enlarged image overlay */}
       {state.imageIndex !== null && images.length > 0 && state.imageIndex < images.length && (
         <div
-          className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center"
+          className={`fixed inset-0 bg-black/95 z-[60] flex items-center justify-center transition-opacity duration-200 ${
+            enlargedVisible ? 'opacity-100' : 'opacity-0'
+          }`}
           onClick={closeImage}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {/* Close button */}
           <button
@@ -239,12 +313,20 @@ const AlbumDialog = () => {
             </button>
           )}
 
+          {/* Loading spinner for enlarged image */}
+          {!enlargedImgLoaded && (
+            <Loader2 size={40} className="animate-spin text-white/60 absolute" />
+          )}
+
           {/* Image */}
           <img
             src={`/data/albums/${encodeURIComponent(state.album!)}/${images[state.imageIndex]}`}
             alt={`Foto ${state.imageIndex + 1} von ${images.length}`}
-            className="max-w-[90vw] max-h-[90vh] object-contain"
+            className={`max-w-[90vw] max-h-[90vh] object-contain transition-opacity duration-200 ${
+              enlargedImgLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
             onClick={e => e.stopPropagation()}
+            onLoad={() => setEnlargedImgLoaded(true)}
           />
 
           {/* Image counter */}
