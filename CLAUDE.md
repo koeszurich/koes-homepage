@@ -9,9 +9,10 @@ Replaced the "Vergangene Events" (Past Events) section with a "Fotos" (Photos) s
 ### New Files
 
 - `src/components/AlbumProvider.tsx` — React context provider managing album state and hash-based routing (`#fotos/{album}`, `#fotos/{album}/{imageIndex}`)
-- `src/components/AlbumDialog.tsx` — Full-screen popup (fixed height) with album selector (pill buttons), image grid, enlarged image view with prev/next navigation, keyboard support, touch swipe, smooth fade transitions, and loading spinners
-- `src/components/Fotos.tsx` — Main section component with 3 album preview tiles (name overlay on random image) + an "Alle anzeigen" tile that rotates every 10 seconds; grid uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` matching Team section layout
+- `src/components/AlbumDialog.tsx` — Full-screen popup (fixed height) with vertical sidebar (desktop) / tabs with overflow arrows (mobile) for album selection, image grid with per-image placeholder shimmer, enlarged image view with prev/next navigation, keyboard support, touch swipe, smooth fade transitions, and loading spinners
+- `src/components/Fotos.tsx` — Main section component with 3 album preview tiles (centered name overlay on darkened random image) + an "Alle anzeigen" tile; rotates 1 tile at a time every 10 seconds with fade effect; grid uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` matching Team section layout
 - `src/types/album.ts` — Shared `AlbumEntry` type definition
+- `src/lib/albumCache.ts` — In-memory cache for `index.json` fetches (album list + per-album image lists)
 - `scripts/update-album.sh` — Bash script to create/update album index files from image files in a directory
 
 ### Modified Files
