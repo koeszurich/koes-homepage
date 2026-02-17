@@ -274,7 +274,7 @@ const AlbumDialog = () => {
           {/* Header */}
           <div className="p-4 border-b flex justify-between items-center shrink-0">
             <h3 className="text-xl font-bold text-koes-dark">
-              {selectedAlbum?.displayName || state.album}
+              Fotos
             </h3>
             <button
               onClick={closeDialog}
@@ -348,15 +348,6 @@ const AlbumDialog = () => {
             </div>
           </div>
 
-          {/* Mobile close button */}
-          <div className="sticky bottom-0 w-full p-4 bg-white border-t md:hidden shrink-0">
-            <button
-              onClick={closeDialog}
-              className="w-full py-2 px-4 bg-koes-red text-white rounded-lg hover:bg-koes-red/90 transition-colors"
-            >
-              Schließen
-            </button>
-          </div>
         </div>
       </div>
 
@@ -418,9 +409,10 @@ const AlbumDialog = () => {
             onLoad={() => setEnlargedImgLoaded(true)}
           />
 
-          {/* Image counter */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
-            {state.imageIndex + 1} / {images.length}
+          {/* Image counter + album name */}
+          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center text-white/70 text-sm gap-2">
+            <span className="truncate max-w-[60%]">{selectedAlbum?.displayName || state.album}</span>
+            <span className="shrink-0">{state.imageIndex + 1} / {images.length}</span>
           </div>
         </div>
       )}
