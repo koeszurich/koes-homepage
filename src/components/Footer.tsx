@@ -53,29 +53,16 @@ const Footer = () => {
             </button>
           </div>
 
-          {/* <div>
-            <h3 className="text-xl font-bold mb-4 text-white">Links</h3>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-koes-red transition-colors flex items-center"
-                >
-                  <ExternalLink size={16} className="mr-2" />
-                  <span>Impressum</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-300 hover:text-koes-red transition-colors flex items-center"
-                >
-                  <ExternalLink size={16} className="mr-2" />
-                  <span>Datenschutz</span>
-                </a>
-              </li>
-            </ul>
-          </div> */}
+          <div>
+            <h3 className="text-xl font-bold mb-4 text-white">Impressum</h3>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              KÖS - Klub der Österreichischen Studierenden Zürich<br />
+              c/o Emanuel Mairoll<br />
+              Universitätstrasse 6<br />
+              8006 Zürich<br />
+              <a href="mailto:info@koes.ch" className="hover:text-koes-red transition-colors">info@koes.ch</a>
+            </p>
+          </div>
         </div>
 
         <div className="mt-12 pt-6 border-t border-gray-800 text-center text-gray-400">
