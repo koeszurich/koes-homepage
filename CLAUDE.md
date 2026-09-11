@@ -12,8 +12,8 @@ nothing about the gallery is stored in this repository.
 ### New Files
 
 - `src/components/AlbumProvider.tsx` — React context provider managing album state and hash-based routing (`#fotos/{album}`, `#fotos/{album}/{imageIndex}`)
-- `src/components/AlbumDialog.tsx` — Full-screen popup (fixed height) with vertical sidebar (desktop) / tabs with overflow arrows (mobile) for album selection, image grid with per-image placeholder shimmer, enlarged image view with prev/next navigation, keyboard support, touch swipe, smooth fade transitions, and loading spinners
-- `src/components/Fotos.tsx` — Main section component with 3 album preview tiles (centered name overlay on darkened random image) + an "Alle anzeigen" tile; rotates 1 tile at a time every 10 seconds with fade effect; grid uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` matching Team section layout
+- `src/components/AlbumDialog.tsx` — Full-screen popup (fixed height) with vertical sidebar (desktop) / tabs with overflow arrows (mobile) for album selection, the album's description and its date with a calendar icon above the grid (inside the scrolling pane, so it stays below the tabs on mobile), image grid with per-image placeholder shimmer, enlarged image view with prev/next navigation, keyboard support, touch swipe, smooth fade transitions, and loading spinners
+- `src/components/Fotos.tsx` — Main section component with 3 album preview tiles (centered name overlay on a darkened random image, with the album date on a second, non-bold line) + an "Alle anzeigen" tile; rotates 1 tile at a time every 10 seconds with fade effect; grid uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` matching Team section layout
 - `src/types/album.ts` — `Album`, `AlbumImage` and `AlbumContents` types
 - `src/lib/galleryApi.ts` — Gallery API client: endpoint wrappers, image and thumbnail URLs, `snake_case` → `camelCase` mapping, and an in-memory cache of the JSON responses
 
@@ -22,6 +22,7 @@ nothing about the gallery is stored in this repository.
 - `src/App.tsx` — Added `AlbumProvider` wrapper
 - `src/pages/Index.tsx` — Replaced `PastEvents` with `Fotos` + `AlbumDialog`
 - `src/components/Navbar.tsx` — Changed "Vergangene Events" nav link to "Fotos" (`#fotos`)
+- `src/lib/utils.ts` — Added `formatAlbumDate`, which renders an album's `YYYY-MM-DD` date as e.g. `27. März 2025` (`de-CH`), matching how the old "Vergangene Events" section wrote dates
 
 ## Architecture
 

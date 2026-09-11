@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Loader2, Calendar } from 'lucide-react';
 import { useAlbum } from './AlbumProvider';
 import { ApiError, fetchAlbums, fetchAlbumContents, imageUrl, thumbnailUrl } from '@/lib/galleryApi';
 import type { Album, AlbumImage } from '@/types/album';
+import { formatAlbumDate } from '@/lib/utils';
 
 /** A single grid image that shows a placeholder until loaded. */
 const GridImage = ({ src, alt, onClick }: { src: string; alt: string; onClick: () => void }) => {
@@ -343,8 +344,20 @@ const AlbumDialog = () => {
               )}
             </div>
 
-            {/* Image grid */}
+            {/* Album details + image grid. Sitting inside this pane puts them
+                below the mobile tabs and beside the desktop sidebar. */}
             <div className="p-4 overflow-y-auto flex-1">
+              {selectedAlbum && !imagesError && (
+                <div className="mb-4">
+                  {selectedAlbum.description && (
+                    <p className="text-gray-600 whitespace-pre-line">{selectedAlbum.description}</p>
+                  )}
+                  <div className={`flex items-center text-koes-red ${selectedAlbum.description ? 'mt-2' : ''}`}>
+                    <Calendar size={16} className="mr-2 shrink-0" />
+                    <span className="font-medium">{formatAlbumDate(selectedAlbum.date)}</span>
+                  </div>
+                </div>
+              )}
               {loadingImages ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <Loader2 size={32} className="animate-spin text-koes-red" />

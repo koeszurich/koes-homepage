@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Camera } from 'lucide-react';
 import { useAlbum } from './AlbumProvider';
 import { fetchAlbums, fetchAlbumContents, thumbnailUrl } from '@/lib/galleryApi';
+import { formatAlbumDate } from '@/lib/utils';
 import type { Album, AlbumImage } from '@/types/album';
 
 const ROTATE_INTERVAL = 10_000;
@@ -226,8 +227,11 @@ const Fotos = () => {
               fading={fadingSlot === idx}
               onClick={() => openAlbum(tile.album.name)}
             >
-              <span className="absolute inset-0 flex items-center justify-center text-white text-sm sm:text-base font-semibold drop-shadow-lg text-center leading-tight px-3">
-                {tile.album.displayName}
+              <span className="absolute inset-0 flex flex-col items-center justify-center text-white text-sm sm:text-base drop-shadow-lg text-center leading-tight px-3">
+                <span className="font-semibold">{tile.album.displayName}</span>
+                <span className="mt-1 text-xs sm:text-sm font-normal">
+                  {formatAlbumDate(tile.album.date)}
+                </span>
               </span>
             </PreviewTileImage>
           ))}
