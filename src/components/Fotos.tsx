@@ -1,118 +1,80 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Camera } from 'lucide-react';
 import { useAlbum } from './AlbumProvider';
-import { fetchAlbumList, fetchAlbumImages } from '@/lib/albumCache';
-import type { AlbumEntry } from '@/types/album';
+import { fetchAlbums, fetchAlbumContents, thumbnailUrl } from '@/lib/galleryApi';
+import type { Album, AlbumImage } from '@/types/album';
 
 const ROTATE_INTERVAL = 10_000;
+/** Matches the fade of `PreviewTileImage`, so content is swapped while invisible. */
+const FADE_DURATION = 700;
+const ALBUM_TILE_COUNT = 3;
 
-interface AlbumImages {
-  album: AlbumEntry;
-  files: string[];
-}
-
-interface PreviewTile {
-  album: string;
-  displayName: string;
-  file: string;
-}
-
-interface AlleTile {
-  album: string;
-  file: string;
+/** One preview tile: an album and the image currently standing in for it. */
+interface Tile {
+  album: Album;
+  image: AlbumImage;
 }
 
 function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-/**
- * Build initial 3 album tiles + 1 "Alle anzeigen" tile.
- * No album or image appears more than once.
- */
-function buildInitialPreview(
-  albumData: AlbumImages[],
-): { albumTiles: PreviewTile[]; alleTile: AlleTile | null } {
-  if (albumData.length === 0) return { albumTiles: [], alleTile: null };
-
-  const shuffled = [...albumData].sort(() => Math.random() - 0.5);
-  const selected = shuffled.slice(0, 3);
-  const usedImages = new Set<string>();
-  const usedAlbumNames = new Set<string>();
-
-  const albumTiles: PreviewTile[] = [];
-  for (const entry of selected) {
-    if (entry.files.length === 0) continue;
-    const file = pickRandom(entry.files);
-    usedImages.add(`${entry.album.name}/${file}`);
-    usedAlbumNames.add(entry.album.name);
-    albumTiles.push({ album: entry.album.name, displayName: entry.album.displayName, file });
-  }
-
-  let alleTile: AlleTile | null = null;
-  const remaining = albumData.filter(a => !usedAlbumNames.has(a.album.name) && a.files.length > 0);
-  const pool = remaining.length > 0 ? remaining : albumData.filter(a => a.files.length > 0);
-  if (pool.length > 0) {
-    const alleAlbum = pickRandom(pool);
-    const available = alleAlbum.files.filter(f => !usedImages.has(`${alleAlbum.album.name}/${f}`));
-    const file = available.length > 0 ? pickRandom(available) : pickRandom(alleAlbum.files);
-    alleTile = { album: alleAlbum.album.name, file };
-  }
-
-  return { albumTiles, alleTile };
+function shuffle<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
 /**
- * Replace a single tile (at slotIndex) with a new random album/image,
- * ensuring no duplicate albums or images with the other visible tiles.
+ * Pick an album that is not already on screen together with one of its images.
+ * Albums are tried in random order until one yields an image, so an album that
+ * cannot be loaded just costs a candidate. Falls back to repeating an album (an
+ * image is never repeated) when there are fewer albums than tiles.
+ *
+ * Only the chosen candidates are fetched, so the section costs one listing plus
+ * one request per tile rather than one per album.
  */
-function rotateSingleTile(
-  albumData: AlbumImages[],
-  currentTiles: PreviewTile[],
-  currentAlle: AlleTile | null,
-  slotIndex: number,
-): { albumTiles: PreviewTile[]; alleTile: AlleTile | null } {
-  // Collect what's currently used, excluding the slot being replaced
-  const usedAlbumNames = new Set<string>();
+async function pickTile(
+  albums: Album[],
+  usedAlbums: Set<string>,
+  usedImages: Set<string>,
+): Promise<Tile | null> {
+  const nonEmpty = albums.filter(album => album.imageCount > 0);
+  const unused = nonEmpty.filter(album => !usedAlbums.has(album.name));
+  const candidates = shuffle(unused.length > 0 ? unused : nonEmpty);
+
+  for (const album of candidates) {
+    let images: AlbumImage[];
+    try {
+      images = (await fetchAlbumContents(album.name)).images;
+    } catch {
+      continue;
+    }
+    const fresh = images.filter(image => !usedImages.has(image.id));
+    const pool = fresh.length > 0 ? fresh : images;
+    if (pool.length > 0) {
+      return { album, image: pickRandom(pool) };
+    }
+  }
+  return null;
+}
+
+/** Build the initial 3 album tiles + the image behind "Alle anzeigen". */
+async function buildTiles(albums: Album[]): Promise<{ albumTiles: Tile[]; alleTile: Tile | null }> {
+  const usedAlbums = new Set<string>();
   const usedImages = new Set<string>();
+  const albumTiles: Tile[] = [];
 
-  const isAlleSlot = slotIndex >= currentTiles.length;
-
-  currentTiles.forEach((t, i) => {
-    if (!isAlleSlot && i === slotIndex) return;
-    usedAlbumNames.add(t.album);
-    usedImages.add(`${t.album}/${t.file}`);
-  });
-  if (!isAlleSlot && currentAlle) {
-    usedImages.add(`${currentAlle.album}/${currentAlle.file}`);
+  for (let i = 0; i < ALBUM_TILE_COUNT; i++) {
+    const tile = await pickTile(albums, usedAlbums, usedImages);
+    if (!tile) break;
+    usedAlbums.add(tile.album.name);
+    usedImages.add(tile.image.id);
+    albumTiles.push(tile);
   }
 
-  if (isAlleSlot) {
-    // Replace the "Alle anzeigen" tile's background image
-    const pool = albumData.filter(a => a.files.length > 0);
-    if (pool.length === 0) return { albumTiles: currentTiles, alleTile: currentAlle };
-    const alleAlbum = pickRandom(pool);
-    const available = alleAlbum.files.filter(f => !usedImages.has(`${alleAlbum.album.name}/${f}`));
-    const file = available.length > 0 ? pickRandom(available) : pickRandom(alleAlbum.files);
-    return { albumTiles: currentTiles, alleTile: { album: alleAlbum.album.name, file } };
-  }
-
-  // Replace an album tile
-  const availableAlbums = albumData.filter(
-    a => !usedAlbumNames.has(a.album.name) && a.files.length > 0,
-  );
-  const pool = availableAlbums.length > 0
-    ? availableAlbums
-    : albumData.filter(a => a.files.length > 0);
-  if (pool.length === 0) return { albumTiles: currentTiles, alleTile: currentAlle };
-
-  const chosen = pickRandom(pool);
-  const availableFiles = chosen.files.filter(f => !usedImages.has(`${chosen.album.name}/${f}`));
-  const file = availableFiles.length > 0 ? pickRandom(availableFiles) : pickRandom(chosen.files);
-
-  const newTiles = [...currentTiles];
-  newTiles[slotIndex] = { album: chosen.album.name, displayName: chosen.album.displayName, file };
-  return { albumTiles: newTiles, alleTile: currentAlle };
+  // The "Alle anzeigen" tile only borrows an image; it may repeat an album that
+  // is already shown, but not an image.
+  const alleTile = await pickTile(albums, usedAlbums, usedImages);
+  return { albumTiles, alleTile };
 }
 
 /** Single preview tile with placeholder and fade transition. */
@@ -152,45 +114,37 @@ const PreviewTileImage = ({
 
 const Fotos = () => {
   const { openAlbum } = useAlbum();
-  const [albumData, setAlbumData] = useState<AlbumImages[]>([]);
-  const [albumTiles, setAlbumTiles] = useState<PreviewTile[]>([]);
-  const [alleTile, setAlleTile] = useState<AlleTile | null>(null);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [albumTiles, setAlbumTiles] = useState<Tile[]>([]);
+  const [alleTile, setAlleTile] = useState<Tile | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [fadingSlot, setFadingSlot] = useState<number | null>(null);
-  const albumDataRef = useRef<AlbumImages[]>([]);
-  const tilesRef = useRef<PreviewTile[]>([]);
-  const alleRef = useRef<AlleTile | null>(null);
+  const albumsRef = useRef<Album[]>([]);
+  const tilesRef = useRef<Tile[]>([]);
+  const alleRef = useRef<Tile | null>(null);
   const nextSlotRef = useRef(0);
 
-  // Fetch all album data on mount (cached)
+  // Fetch the album list and the images of the albums actually shown (cached).
   useEffect(() => {
     let cancelled = false;
     const loadData = async () => {
       try {
-        const albumList = await fetchAlbumList();
+        const albumList = await fetchAlbums();
         if (cancelled) return;
+        albumsRef.current = albumList;
+        setAlbums(albumList);
 
-        const data: AlbumImages[] = [];
-        for (const album of albumList) {
-          try {
-            const files = await fetchAlbumImages(album.name);
-            data.push({ album, files });
-          } catch { /* skip */ }
-        }
-        if (cancelled) return;
+        const { albumTiles: tiles, alleTile: alle } = await buildTiles(albumList);
+        if (cancelled || tiles.length === 0) return;
 
-        albumDataRef.current = data;
-        setAlbumData(data);
-
-        const { albumTiles: tiles, alleTile: alle } = buildInitialPreview(data);
         tilesRef.current = tiles;
         alleRef.current = alle;
         setAlbumTiles(tiles);
         setAlleTile(alle);
         setLoaded(true);
         requestAnimationFrame(() => { if (!cancelled) setFadeIn(true); });
-      } catch { /* fail silently */ }
+      } catch { /* fail silently: the section stays hidden */ }
     };
     loadData();
     return () => { cancelled = true; };
@@ -198,37 +152,58 @@ const Fotos = () => {
 
   // Rotate one tile at a time with fade effect
   useEffect(() => {
-    if (!loaded || albumData.length === 0) return;
-    const totalSlots = tilesRef.current.length + 1; // +1 for Alle tile
+    if (!loaded) return;
+    let cancelled = false;
 
     const interval = setInterval(() => {
+      const totalSlots = tilesRef.current.length + (alleRef.current ? 1 : 0);
       const slot = nextSlotRef.current % totalSlots;
       nextSlotRef.current++;
+      const isAlleSlot = slot >= tilesRef.current.length;
 
-      // Phase 1: Fade out
+      // Everything visible except the slot being replaced stays off limits.
+      const usedAlbums = new Set<string>();
+      const usedImages = new Set<string>();
+      tilesRef.current.forEach((tile, index) => {
+        if (!isAlleSlot && index === slot) return;
+        usedAlbums.add(tile.album.name);
+        usedImages.add(tile.image.id);
+      });
+      if (!isAlleSlot && alleRef.current) {
+        usedImages.add(alleRef.current.image.id);
+      }
+
+      // Phase 1: fade out, and load the replacement while it fades.
       setFadingSlot(slot);
+      const replacement = pickTile(albumsRef.current, usedAlbums, usedImages).catch(() => null);
 
-      // Phase 2: After fade-out completes, swap content and fade in
-      setTimeout(() => {
-        const { albumTiles: newTiles, alleTile: newAlle } = rotateSingleTile(
-          albumDataRef.current, tilesRef.current, alleRef.current, slot,
-        );
-        tilesRef.current = newTiles;
-        alleRef.current = newAlle;
-        setAlbumTiles(newTiles);
-        setAlleTile(newAlle);
+      // Phase 2: after the fade-out, swap the content and fade back in.
+      setTimeout(async () => {
+        const tile = await replacement;
+        if (cancelled) return;
+        if (tile) {
+          if (isAlleSlot) {
+            alleRef.current = tile;
+            setAlleTile(tile);
+          } else {
+            const newTiles = [...tilesRef.current];
+            newTiles[slot] = tile;
+            tilesRef.current = newTiles;
+            setAlbumTiles(newTiles);
+          }
+        }
         setFadingSlot(null);
-      }, 700); // matches transition-opacity duration
+      }, FADE_DURATION);
     }, ROTATE_INTERVAL);
 
-    return () => clearInterval(interval);
-  }, [loaded, albumData.length]);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [loaded]);
 
   const handleOpenDefault = useCallback(() => {
-    if (albumData.length > 0) {
-      openAlbum(albumData[0].album.name);
+    if (albums.length > 0) {
+      openAlbum(albums[0].name);
     }
-  }, [albumData, openAlbum]);
+  }, [albums, openAlbum]);
 
   if (!loaded || albumTiles.length === 0) return null;
 
@@ -246,13 +221,13 @@ const Fotos = () => {
           {albumTiles.map((tile, idx) => (
             <PreviewTileImage
               key={`album-${idx}`}
-              src={`/data/albums/${encodeURIComponent(tile.album)}/${tile.file}`}
-              alt={tile.displayName}
+              src={thumbnailUrl(tile.image)}
+              alt={tile.album.displayName}
               fading={fadingSlot === idx}
-              onClick={() => openAlbum(tile.album)}
+              onClick={() => openAlbum(tile.album.name)}
             >
               <span className="absolute inset-0 flex items-center justify-center text-white text-sm sm:text-base font-semibold drop-shadow-lg text-center leading-tight px-3">
-                {tile.displayName}
+                {tile.album.displayName}
               </span>
             </PreviewTileImage>
           ))}
@@ -260,7 +235,7 @@ const Fotos = () => {
           {alleTile && (
             <PreviewTileImage
               key="alle"
-              src={`/data/albums/${encodeURIComponent(alleTile.album)}/${alleTile.file}`}
+              src={thumbnailUrl(alleTile.image)}
               alt="Alle Fotos anzeigen"
               fading={fadingSlot === albumTiles.length}
               onClick={handleOpenDefault}

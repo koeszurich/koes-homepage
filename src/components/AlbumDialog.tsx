@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useAlbum } from './AlbumProvider';
-import { fetchAlbumList, fetchAlbumImages } from '@/lib/albumCache';
-import type { AlbumEntry } from '@/types/album';
+import { ApiError, fetchAlbums, fetchAlbumContents, imageUrl, thumbnailUrl } from '@/lib/galleryApi';
+import type { Album, AlbumImage } from '@/types/album';
 
 /** A single grid image that shows a placeholder until loaded. */
 const GridImage = ({ src, alt, onClick }: { src: string; alt: string; onClick: () => void }) => {
@@ -31,7 +31,7 @@ const GridImage = ({ src, alt, onClick }: { src: string; alt: string; onClick: (
 /** Mobile tabs bar: horizontally scrollable with overflow arrow indicators. */
 const MobileAlbumTabs = ({
   albums, selected, onSelect,
-}: { albums: AlbumEntry[]; selected: string; onSelect: (name: string) => void }) => {
+}: { albums: Album[]; selected: string; onSelect: (name: string) => void }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -98,8 +98,16 @@ const MobileAlbumTabs = ({
 
 const AlbumDialog = () => {
   const { state, openAlbum, openImage, closeDialog, closeImage } = useAlbum();
-  const [albums, setAlbums] = useState<AlbumEntry[]>([]);
-  const [images, setImages] = useState<string[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  /**
+   * Albums opened by URL that the API does not list: `unlisted` ones. Keeping
+   * them here lets the sidebar show which album is open, and lets the visitor
+   * return to it after looking at a listed album.
+   */
+  const [unlistedAlbums, setUnlistedAlbums] = useState<Album[]>([]);
+  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [images, setImages] = useState<AlbumImage[]>([]);
+  const [imagesError, setImagesError] = useState<'not_found' | 'failed' | null>(null);
   const [loadingAlbums, setLoadingAlbums] = useState(false);
   const [loadingImages, setLoadingImages] = useState(false);
   const [imageGridVisible, setImageGridVisible] = useState(false);
@@ -143,7 +151,7 @@ const AlbumDialog = () => {
     const doFetch = async () => {
       setLoadingAlbums(true);
       try {
-        const data = await fetchAlbumList();
+        const data = await fetchAlbums();
         if (!cancelled) setAlbums(data);
       } catch {
         if (!cancelled) setAlbums([]);
@@ -155,7 +163,8 @@ const AlbumDialog = () => {
     return () => { cancelled = true; };
   }, [isOpen, albums.length]);
 
-  // Fetch images for selected album (cached)
+  // Fetch the selected album and its images (cached). The response carries the
+  // album itself, which is what makes an unlisted album reachable by URL.
   useEffect(() => {
     const album = state.album;
     if (!album) {
@@ -169,15 +178,25 @@ const AlbumDialog = () => {
     const doFetch = async () => {
       setImageGridVisible(false);
       setLoadingImages(true);
+      setImagesError(null);
+      setSelectedAlbum(null);
       setImages([]);
       try {
-        const data = await fetchAlbumImages(album);
-        if (!cancelled) {
-          setImages(data);
-          requestAnimationFrame(() => { if (!cancelled) setImageGridVisible(true); });
+        const contents = await fetchAlbumContents(album);
+        if (cancelled) return;
+        setSelectedAlbum(contents.album);
+        setImages(contents.images);
+        if (contents.album.visibility !== 'public') {
+          setUnlistedAlbums(prev =>
+            prev.some(a => a.name === contents.album.name) ? prev : [contents.album, ...prev],
+          );
         }
-      } catch {
-        if (!cancelled) { setImages([]); setImageGridVisible(true); }
+        requestAnimationFrame(() => { if (!cancelled) setImageGridVisible(true); });
+      } catch (error) {
+        if (cancelled) return;
+        setImages([]);
+        setImagesError(error instanceof ApiError && error.status === 404 ? 'not_found' : 'failed');
+        setImageGridVisible(true);
       } finally {
         if (!cancelled) setLoadingImages(false);
       }
@@ -254,7 +273,11 @@ const AlbumDialog = () => {
 
   if (state.album === null) return null;
 
-  const selectedAlbum = albums.find(a => a.name === state.album);
+  const sidebarAlbums = [
+    ...unlistedAlbums.filter(album => !albums.some(listed => listed.name === album.name)),
+    ...albums,
+  ];
+  const enlargedImage = state.imageIndex !== null ? images[state.imageIndex] : undefined;
 
   return (
     <>
@@ -286,9 +309,9 @@ const AlbumDialog = () => {
           </div>
 
           {/* Mobile: Tabs with overflow arrows */}
-          {!loadingAlbums && albums.length > 0 && (
+          {!loadingAlbums && sidebarAlbums.length > 0 && (
             <MobileAlbumTabs
-              albums={albums}
+              albums={sidebarAlbums}
               selected={state.album!}
               onSelect={openAlbum}
             />
@@ -304,7 +327,7 @@ const AlbumDialog = () => {
                   Laden...
                 </div>
               ) : (
-                albums.map(album => (
+                sidebarAlbums.map(album => (
                   <button
                     key={album.name}
                     onClick={() => openAlbum(album.name)}
@@ -327,19 +350,25 @@ const AlbumDialog = () => {
                   <Loader2 size={32} className="animate-spin text-koes-red" />
                   <span className="text-gray-400">Fotos werden geladen...</span>
                 </div>
-              ) : images.length === 0 ? (
+              ) : imagesError !== null || images.length === 0 ? (
                 <div className="flex items-center justify-center py-16">
-                  <span className="text-gray-400">Keine Fotos vorhanden.</span>
+                  <span className="text-gray-400">
+                    {imagesError === 'not_found'
+                      ? 'Dieses Album gibt es nicht.'
+                      : imagesError === 'failed'
+                        ? 'Die Fotos konnten nicht geladen werden.'
+                        : 'Keine Fotos vorhanden.'}
+                  </span>
                 </div>
               ) : (
                 <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 transition-opacity duration-300 ${
                   imageGridVisible ? 'opacity-100' : 'opacity-0'
                 }`}>
-                  {images.map((img, index) => (
+                  {images.map((image, index) => (
                     <GridImage
-                      key={`${state.album}-${index}`}
-                      src={`/data/albums/${encodeURIComponent(state.album!)}/${img}`}
-                      alt={`Foto ${index + 1}`}
+                      key={image.id}
+                      src={thumbnailUrl(image)}
+                      alt={image.description ?? `Foto ${index + 1}`}
                       onClick={() => state.album && openImage(state.album, index)}
                     />
                   ))}
@@ -352,7 +381,7 @@ const AlbumDialog = () => {
       </div>
 
       {/* Enlarged image overlay */}
-      {state.imageIndex !== null && images.length > 0 && state.imageIndex < images.length && (
+      {enlargedImage && (
         <div
           className={`fixed inset-0 bg-black/95 z-[60] flex items-center justify-center transition-opacity duration-200 ${
             enlargedVisible ? 'opacity-100' : 'opacity-0'
@@ -372,7 +401,7 @@ const AlbumDialog = () => {
           </button>
 
           {/* Previous button */}
-          {state.imageIndex > 0 && (
+          {state.imageIndex! > 0 && (
             <button
               onClick={e => { e.stopPropagation(); handlePrev(); }}
               className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors z-10 bg-black/30 rounded-full p-2"
@@ -383,7 +412,7 @@ const AlbumDialog = () => {
           )}
 
           {/* Next button */}
-          {state.imageIndex < images.length - 1 && (
+          {state.imageIndex! < images.length - 1 && (
             <button
               onClick={e => { e.stopPropagation(); handleNext(); }}
               className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 text-white/80 hover:text-white transition-colors z-10 bg-black/30 rounded-full p-2"
@@ -398,10 +427,10 @@ const AlbumDialog = () => {
             <Loader2 size={40} className="animate-spin text-white/60 absolute" />
           )}
 
-          {/* Image */}
+          {/* Image: the original, the one place a thumbnail is not enough. */}
           <img
-            src={`/data/albums/${encodeURIComponent(state.album!)}/${images[state.imageIndex]}`}
-            alt={`Foto ${state.imageIndex + 1} von ${images.length}`}
+            src={imageUrl(enlargedImage)}
+            alt={enlargedImage.description ?? `Foto ${state.imageIndex! + 1} von ${images.length}`}
             className={`max-w-[90vw] max-h-[90vh] object-contain transition-opacity duration-200 ${
               enlargedImgLoaded ? 'opacity-100' : 'opacity-0'
             }`}
@@ -412,7 +441,7 @@ const AlbumDialog = () => {
           {/* Image counter + album name */}
           <div className="absolute bottom-4 left-4 right-4 flex items-center justify-center text-white/70 text-sm gap-2">
             <span className="truncate max-w-[60%]">{selectedAlbum?.displayName || state.album}</span>
-            <span className="shrink-0">{state.imageIndex + 1} / {images.length}</span>
+            <span className="shrink-0">{state.imageIndex! + 1} / {images.length}</span>
           </div>
         </div>
       )}
