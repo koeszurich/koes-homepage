@@ -29,6 +29,7 @@ const Events = () => {
                data-max-events="12"
                data-language="de"
                data-accent-color="#d62c29"
+               data-include-past="true"
                data-hide-header="true"/>
         </div>
       </div>
